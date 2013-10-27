@@ -1,0 +1,3 @@
+title=ABC
+author=Leonardo C Santos
+orientation=portrait
