@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 from kivy.graphics import Color, Ellipse, Line
 from kivy.gesture import Gesture, GestureDatabase
+from kivy.core.audio import SoundLoader
 
 from gestures import gestures
 
@@ -20,6 +21,9 @@ class GestureBoard(FloatLayout):
         super(GestureBoard, self).__init__()
         self.gdb = GestureDatabase()
 
+        self.error_sound = SoundLoader.load('error.mp3')
+        self.success_sound = SoundLoader.load('success.mp3')
+
         #Gestures
         for key, ges in gestures.items():
             self.gdb.add_gesture(ges)
@@ -32,7 +36,9 @@ class GestureBoard(FloatLayout):
         letter_button = Button(
             text=self.letter,
             size_hint=(.1, .1),
-            pos_hint={'x':0, 'y':.9}
+            pos_hint={'x':0, 'y':.9},
+            font_size=38,
+            line_height=1
         )
         self.add_widget(letter_button)
         ponts_button = Button(
@@ -68,12 +74,20 @@ class GestureBoard(FloatLayout):
             '',
             list(zip(touch.ud['line'].points[::2], touch.ud['line'].points[1::2]))
         )
+        print("gesture representation:", self.gdb.gesture_to_str(g))
 
         # use database to find the more alike gesture, if any
         g2 = self.gdb.find(g, minscore=0.70)
         if g2:
             if self._get_key_by_gesture(g2[1]) == self.letter:
                 self.ponts += 10
+                if self.success_sound.status != 'stop':
+                    self.success_sound.stop()
+                self.success_sound.play()
+        else:
+            if self.error_sound.status != 'stop':
+                self.error_sound.stop()
+            self.error_sound.play()
 
         # erase the lines on the screen, this is a bit quick&dirty, since we
         # can have another touch event on the way...
